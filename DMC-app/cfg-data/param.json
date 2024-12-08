@@ -1,0 +1,27 @@
+{
+    "MQTT_Broker": "ie-databus",
+    "User": "edge",
+    "Password": "edge",
+    "Metadata_Topic": "ie/m/j/simatic/v1/s7c1/dp",
+    "Read_Topic": "ie/d/j/simatic/v1/s7c1/dp/r/myPLC/default",
+    "Write_Topic": "ie/d/j/simatic/v1/s7c1/dp/w/myPLC",
+    "Number_Variables_Operating_Point": 2,
+    "Variables_Operating_Point": [
+        "Data_DB.Temperature_OperatingPoint",
+        "Data_DB.Flow"
+    ],
+    "Variable_Process_Value": "Data_DB.Temperature_Out",
+    "Variable_Control": "Data_DB.Power",
+    "Variable_Clear_Database": "Data_DB.Clear_Database",
+    "DMC_Parameters": [
+        {
+            "Sampling_Time": 1,
+            "N": 59,
+            "Nu": 2,
+            "D": 133,
+            "N1": 22,
+            "l": 1.84
+        }
+    ]
+}
+

@@ -1,0 +1,22 @@
+### Docker Compose File for DMC Control Industrial Edge App ###
+
+version: '2.4'
+
+services:
+###### DMC ######
+  dmc:
+    image: dmc-image
+    mem_limit: 350m
+    restart: unless-stopped
+    networks:
+      - proxy-redirect
+    volumes:
+      - './publish/:/publish/'
+      - './cfg-data/:/cfg-data/'
+
+###### NETWORK CONFIG ######
+networks:
+  proxy-redirect:
+    external: true
+    name: proxy-redirect
+
