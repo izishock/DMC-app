@@ -1,0 +1,126 @@
+<Object Name="HWConfiguration">
+  <ClassRID>1</ClassRID>
+  <Object Name="PROFINET Driver">
+    <ClassRID>2</ClassRID>
+    <Variable Name="DataRecordsConf">
+      <AID>17</AID>
+      <Value Datatype="SparseArray" Valuetype="BLOB">
+        <Field Key="4101" Length="48">02000001000000000000B201000000028000FFFFFFFF000000000080000000008001FFFFFFFF00000000008100000000</Field>
+      </Value>
+    </Variable>
+    <Object Name="PROFINET interface">
+      <ClassRID>3</ClassRID>
+      <Key AID="2">32768</Key>
+      <Variable Name="LADDR">
+        <AID>10</AID>
+        <Value Datatype="Scalar" Valuetype="UINT16">64</Value>
+      </Variable>
+      <Variable Name="DataRecordsConf">
+        <AID>11</AID>
+        <Value Datatype="SparseArray" Valuetype="BLOB">
+          <Field Key="4097" Length="12">300600080101000000000000</Field>
+          <Field Key="4096" Length="20">3000001001000000C0A83214FFFFFF00C0A83214</Field>
+          <Field Key="4100" Length="12">300900080101000000000000</Field>
+          <Field Key="4099" Length="32">A201001C010000000014000070726F66696E6574786164726976657234393333</Field>
+          <Field Key="65536" Length="12">F00000080100002000030000</Field>
+          <Field Key="32881" Length="12">025000080100000000000001</Field>
+          <Field Key="143616" Length="20">F001001001000000002A00080064000000000000</Field>
+        </Value>
+      </Variable>
+      <Link>
+        <AID>16</AID>
+        <TargetRID>2296447233</TargetRID>
+      </Link>
+    </Object>
+    <Object Name="Port">
+      <ClassRID>4</ClassRID>
+      <Key AID="2">32769</Key>
+      <Variable Name="LADDR">
+        <AID>10</AID>
+        <Value Datatype="Scalar" Valuetype="UINT16">65</Value>
+      </Variable>
+      <Variable Name="DataRecordsConf">
+        <AID>11</AID>
+        <Value Datatype="SparseArray" Valuetype="BLOB">
+          <Field Key="32811" Length="64">0200003C0100000000018001020A003001000108706F72742D30303121706C637862312E70726F66696E65747861696E74657266616365786231303336630000</Field>
+        </Value>
+      </Variable>
+    </Object>
+  </Object>
+  <Object Name="PROFINET IO-System">
+    <RID>2296447233</RID>
+    <ClassRID>5</ClassRID>
+    <Variable Name="LADDR">
+      <AID>10</AID>
+      <Value Datatype="Scalar" Valuetype="UINT16">257</Value>
+    </Variable>
+    <Variable Name="IOsysParamConfig">
+      <AID>15</AID>
+      <Value Datatype="SparseArray" Valuetype="BLOB">
+        <Field Key="12352" Length="20">3040001001000000002A000800640258012C0000</Field>
+      </Value>
+    </Variable>
+    <Object Name="PLC_1">
+      <ClassRID>6</ClassRID>
+      <Key AID="3">1</Key>
+      <Variable Name="DeactivatedConfig">
+        <AID>4</AID>
+        <Value Datatype="Scalar" Valuetype="BOOL">false</Value>
+      </Variable>
+      <Variable Name="LADDR">
+        <AID>10</AID>
+        <Value Datatype="Scalar" Valuetype="UINT16">259</Value>
+      </Variable>
+      <Variable Name="IODevParamConfig">
+        <AID>13</AID>
+        <Value Datatype="SparseArray" Valuetype="BLOB">
+          <Field Key="12544" Length="64">3100003C010100000100000196F9F35FD504894BBC27A11A3DD917424000001100C8000000000000000000000000000000000000000000000000000000000000</Field>
+          <Field Key="12384" Length="32">3060001C01000000002A010E0064800000000001000010000000000000000000</Field>
+          <Field Key="12546" Length="176">310200AC01000000000200500100000100018892000000000002000280000020000200010000FFFFFFFF00FF00FF0000C0000000000000000000000000000000000000000001000000000001000103E80000000000000000000000500100000200028892000000000002000180010020000200010000FFFFFFFF00FF00FF0000C000000000000000000000000000000000000000000100000000000000000001000103E8000000000000000000000000</Field>
+          <Field Key="12545" Length="64">3101003C0100000000010000000000000001002C010000010000000C6323000003E80000000103E80000000029BF000100000001000100010001000000000000</Field>
+          <Field Key="12551" Length="28">310700180100000001000001889200000000000000060003C000A000</Field>
+        </Value>
+      </Variable>
+      <Object Name="PLC_1">
+        <ClassRID>7</ClassRID>
+        <Key AID="1">1</Key>
+        <Object Name="Transfer area_1">
+          <ClassRID>10</ClassRID>
+          <Key AID="2">1000</Key>
+          <Variable Name="LADDR">
+            <AID>10</AID>
+            <Value Datatype="Scalar" Valuetype="UINT16">261</Value>
+          </Variable>
+          <Variable Name="DataRecordsConf">
+            <AID>11</AID>
+            <Value Datatype="SparseArray" Valuetype="BLOB" />
+          </Variable>
+          <Variable Name="DataRecordsTransferSequence">
+            <AID>14</AID>
+            <Value Datatype="Scalar" Valuetype="BLOB" Length="0" />
+          </Variable>
+          <Variable Name="IOmapping">
+            <AID>5</AID>
+            <Value Datatype="Scalar" Valuetype="STRUCT">
+              <Element AID="6" Datatype="Scalar" Valuetype="UINT32">0</Element>
+              <Element AID="7" Datatype="Scalar" Valuetype="UINT16">1</Element>
+              <Element AID="8" Datatype="Scalar" Valuetype="UINT32">0</Element>
+              <Element AID="9" Datatype="Scalar" Valuetype="UINT16">0</Element>
+            </Value>
+          </Variable>
+        </Object>
+      </Object>
+      <Object Name="Network Parameters">
+        <ClassRID>11</ClassRID>
+        <Variable Name="NetworkParamConfig">
+          <AID>12</AID>
+          <Value Datatype="SparseArray" Valuetype="BLOB">
+            <Field Key="4099" Length="48">A201002C0100000000210000706C637862312E70726F66696E65747861696E7465726661636578623130333663000000</Field>
+            <Field Key="4096" Length="20">3000001001000000C0A832C8FFFFFF00C0A832C8</Field>
+            <Field Key="4103" Length="12">3011000801010000FFFF0000</Field>
+          </Value>
+        </Variable>
+      </Object>
+    </Object>
+  </Object>
+</Object>
