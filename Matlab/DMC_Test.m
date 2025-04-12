@@ -1,12 +1,12 @@
 clear all
-close all
+% close all
 clc
 
-n = 10000;
+n = 40000;
 
 T_in = 15;
 F_max = 12;
-Ph = 80;
+Ph = 50;
 V = 1.6;
 Pnom = 12000;
 cw = 4200;
@@ -39,8 +39,8 @@ for i=1:2*n
     y(i + round(tau0*10):i+round(tau0*10)+n/10) = x(1);
 end
 
-Tp = 1;
-N1 = round(tau0)/Tp;
+Tp = 3;
+N1 = round(tau0/Tp);
 s_raw = (y(n:end)-y(n))/(u_norm(2)-u_norm(1));
 s = s_raw(1:Tp*10:end);
 
@@ -48,16 +48,19 @@ s = s_raw(1:Tp*10:end);
 % plot(time, y)
 
 %%
-D = [1 40 50 75 100 126 200 300 500 1000];
-N = [2 5 10 30 56 75 100 150 200 300];
-Nu = [3 1 2 5 10 20 50];
-l = [5 0.1 1 2.78 5 10 30 100 200 500 1000];
+D_array = [1 40 50 75 100 126 200 300 500 1000];
+N_array = [2 5 10 30 56 75 100 150 200 300];
+Nu_array = [3 1 2 5 10 20 50];
+l_array = [5 0.1 0.5 1 2.78 5 10 30 100 200 500 1000];
 
 params = [126, 59, 2, N1, 2.78];
+best_params = [40, 30, 5, N1, 0.1];
 
-p = D;
+p = [1 1];
 params_end = repmat(params, length(p)-1, 1);
 params_end(:, p(1)) = p(2:end)';
+params_end = params;
+params_end(5) = 0.1;
 
 figure
 
@@ -69,10 +72,10 @@ for k=1:length(p)-1
     N1 = params_end(k,4);
     l = params_end(k,5);
 
-    MP = zeros(N-N1+1, D-1);
+    MP = zeros(N-N1+1, D);
     
     for i=1:N-N1+1
-        for j=1:D-1
+        for j=1:D
             if i+j+N1-1 < D
                 MP(i,j) = s(i+j+N1-1) - s(j);
             else
@@ -186,16 +189,19 @@ for k=1:length(p)-1
 
     subplot(2,1,1)
     plot(time, y, 'LineWidth', 1)
-    xlim([n*3/40 n/10])
+    xlim([3*n/40-5 1850])
     hold on
     grid on
-    legend(D)
     subplot(2,1,2)
     stairs(time_u, F_vec, 'LineWidth', 1)
-    xlim([n*3/40 n/10])
+    xlim([3*n/40-5 1850])
     hold on
     grid on
 end
+subplot(2,1,1)
+legend(string(p(2:end)))
+subplot(2,1,2)
+legend(string(p(2:end)))
 hold off
 
 % sim('Model/Model_2022b.slx', 600);

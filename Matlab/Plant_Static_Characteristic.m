@@ -35,12 +35,12 @@ dT0_dF = diff(T0_sym, F_symbolic);
 dT0_dF_at_F0 = double(subs(dT0_dF, F_symbolic, F0));
 
 % Równanie stycznej
-T0_tangent = T0_at_F0 + dT0_dF_at_F0 * (F(1:300) - F0);
+T0_tangent = T0_at_F0 + dT0_dF_at_F0 * (F(1:500) - F0);
 
 % Wykres
 figure;
 plot(F, T0_values, 'b-', 'LineWidth', 2); hold on;
-plot(F(1:300), T0_tangent, 'r--', 'LineWidth', 2);
+plot(F(1:500), T0_tangent, 'r--', 'LineWidth', 2);
 plot(F0, T0_at_F0, 'ko', 'MarkerSize', 8, 'MarkerFaceColor', 'k');
 xlabel('F');
 ylabel('T0');
