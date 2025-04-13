@@ -6,11 +6,11 @@ h = 0.1;
 F_max = 12;
 V = 1.6;
 Pnom = 12000;
-Ph = 50;
+Ph = 70;
 cw = 4200;
 ro = 1;
 
-T_in = 17;
+T_in = 13.5;
 
 G = -0.0002347*Ph + 1.012;
 
@@ -43,7 +43,7 @@ for i=1:1:n
     u_vector(i) = F;
 end
 
-sys = tf([-0.7051], [35.1 1], 'InputDelay', 21);
+sys = tf([-0.7051], [28.8 1], 'InputDelay', 18.2);
 t = 399.9:0.1:799.9;
 stepresponse = step(sys, t, RespConfig(Amplitude = -14.1819));
 stepresponse = stepresponse + 35;

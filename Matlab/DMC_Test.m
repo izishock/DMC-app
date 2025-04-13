@@ -6,7 +6,7 @@ n = 40000;
 
 T_in = 15;
 F_max = 12;
-Ph = 50;
+Ph = 70;
 V = 1.6;
 Pnom = 12000;
 cw = 4200;
@@ -21,7 +21,7 @@ alpha = F_max/(100*60*V);
 beta = (Ph*Pnom)/(100*cw*ro*V);
 G = -0.0002347*Ph + 1.012;
 
-T_OP = 40;
+T_OP = 45;
 OR = 1/(alpha/(beta*G)*T_OP - alpha/beta*T_in);
 
 for i=1:2*n
@@ -53,14 +53,15 @@ N_array = [2 5 10 30 56 75 100 150 200 300];
 Nu_array = [3 1 2 5 10 20 50];
 l_array = [5 0.1 0.5 1 2.78 5 10 30 100 200 500 1000];
 
-params = [126, 59, 2, N1, 2.78];
+% params = [126, 59, 2, N1, 2.78]; % Params Ph=50%, Tp=1
+params = [25, 16, 2, N1, 0.7955]; % Params Ph=70%, Tp=3
 best_params = [40, 30, 5, N1, 0.1];
 
 p = [1 1];
 params_end = repmat(params, length(p)-1, 1);
 params_end(:, p(1)) = p(2:end)';
 params_end = params;
-params_end(5) = 0.1;
+params_end(5) = 30;
 
 figure
 
@@ -99,7 +100,7 @@ for k=1:length(p)-1
     
     n = 20000;
     
-    Ph = 50;
+    Ph = 70;
     F_max = 12;
     T0 = 15;
     
@@ -120,7 +121,7 @@ for k=1:length(p)-1
     % end
     
     % Control law
-    T_OP = 35;
+    T_OP = 50;
     u_subtruct = 0;
     OR = 50;
     dOR = 0;
@@ -156,7 +157,7 @@ for k=1:length(p)-1
         end
     
         if i == 15000
-            T_OP = 40;
+            T_OP = 45;
         end
         
         F = OR*F_max/100;
