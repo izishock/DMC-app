@@ -27,7 +27,7 @@ T0_sym = -0.0002347*P_fixed*Tin + 1.012*Tin + ...
     (3*Pnom)/(5*cw*ro)*(-0.0002347*P_fixed^2/F_symbolic + 1.012*P_fixed/F_symbolic);
 
 % Rozwiązanie T0 = 40
-F0 = double(vpasolve(T0_sym == 40, F_symbolic, [1 14]));
+F0 = double(vpasolve(T0_sym == 30, F_symbolic, [1 14]));
 
 % Obliczenie T0 i pochodnej w tym punkcie
 T0_at_F0 = double(subs(T0_sym, F_symbolic, F0));
@@ -42,10 +42,11 @@ figure;
 plot(F, T0_values, 'b-', 'LineWidth', 2); hold on;
 plot(F(1:500), T0_tangent, 'r--', 'LineWidth', 2);
 plot(F0, T0_at_F0, 'ko', 'MarkerSize', 8, 'MarkerFaceColor', 'k');
-xlabel('F');
-ylabel('T0');
-title('Funkcja T0 i styczna w punkcie T0 = 40');
-legend('T0(F)', 'Styczna w T0=40', 'Punkt styczności');
+xlabel('F_0, l/min');
+yl = sprintf("T_0, %cC", char(176));
+ylabel(yl);
+title('Charakterystyka statyczna obiektu dla zadanej mocy podgrzewacza P_h');
+legend('Temperatura wyjściowa', 'Temperatura wyjściowa po linearyzacji w punkcie pracy');
 xlim([2 max(F)])
 grid on;
 
@@ -110,15 +111,15 @@ hold on;
 % Funkcja nieliniowa na pełnym zakresie
 surf(P_grid_full, F_grid_full, T0_full, 'FaceAlpha', 0.5); % Powierzchnia funkcji nieliniowej (przezroczysta)
 
-% Funkcja zlinearyzowana w wąskim zakresie
-surf(P_grid_lin, F_grid_lin, T0_lin_grid, 'FaceColor', 'r'); % Powierzchnia funkcji zlinearyzowanej
+% % Funkcja zlinearyzowana w wąskim zakresie
+% surf(P_grid_lin, F_grid_lin, T0_lin_grid, 'FaceColor', 'r'); % Powierzchnia funkcji zlinearyzowanej
 
-xlabel('P');
-ylabel('F');
-zlabel('T0');
-title('Porównanie funkcji nieliniowej i jej zlinearyzowanej wersji');
-legend({'Funkcja nieliniowa', 'Funkcja zlinearyzowana'}, 'Location', 'best');
-colorbar;
+xlabel('P_0, %');
+ylabel('F_0, l/min');
+zl = sprintf("T_0, %cC", char(176));
+zlabel(zl);
+title('Charakterystyka statyczna obiektu cieplnego');
+% legend({'Funkcja nieliniowa', 'Funkcja zlinearyzowana'}, 'Location', 'best');
 shading interp;
 grid on;
 hold off;

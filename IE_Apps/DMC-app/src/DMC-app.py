@@ -94,7 +94,7 @@ class mqttclient:
         print("INFO | Start connection to " + self.broker + " broker")
         sys.stdout.flush()
         self.client.username_pw_set(self.mqtt_user, self.mqtt_password)
-        self.client.connect(self.broker, 1883, keepalive=60)
+        self.client.connect(self.broker, 9883, keepalive=60)
         self.client.loop_start()
 
 #============================
@@ -236,16 +236,6 @@ def main():
         Operating_Variables = Data[2:]
         Semaphore_Data.release()
 
-        # Process clearing database if requested
-        if Clear_Database == 1:
-            cursor.execute("DELETE FROM Parameters")
-            db.commit()
-            PLC_WRITE_DATA['vals'][0]['id'] = my_mqtt_client.IDDict.get(variable_clear_database)
-            PLC_WRITE_DATA['vals'][0]['val'] = 0
-            PLC_WRITE_DATA_Str = json.dumps(PLC_WRITE_DATA)
-            my_mqtt_client.client.publish(write_topic, PLC_WRITE_DATA_Str)
-            PLC_WRITE_DATA = {"seq": 1, "vals": [{"id": "", "val": ""}]}
-
         # Check operating point change
         if State == 0 and (Operating_Variables != Operating_Variables_Prev).any:
             where_conditions = " AND ".join([f"Operating_Point_{i+1} = ?" for i in range(number_operating_point)])
@@ -267,45 +257,6 @@ def main():
         if State == 1:
             Control = (0.965 * Operating_Variables[0] - 17) / ((3 * 12000) / (5 * Operating_Variables[1] * 4200 * 1))
 
-
-
-
-
-
-
-
-
-
-
-        # Check database whether it contains parameters for given operating point
-        if temp_Data[0] == 1:
-            where_conditions = " AND ".join([f"Operating_Point_{i+1} = ?" for i in range(number_operating_point)])
-            query = f"SELECT * FROM Parameters WHERE {where_conditions};"
-            cursor.execute(query, tuple(temp_Data[1:number_operating_point+1],))
-            results = cursor.fetchall()
-
-            if len(results) == 0:
-                PLC_WRITE_DATA['vals'][0]['id'] = my_mqtt_client.IDDict.get(variable_state)
-                PLC_WRITE_DATA['vals'][0]['val'] = 2
-                PLC_WRITE_DATA_Str = json.dumps(PLC_WRITE_DATA)
-                my_mqtt_client.client.publish(write_topic, PLC_WRITE_DATA_Str)
-                PLC_WRITE_DATA = {"seq": 1, "vals": [{"id": "", "val": ""}]}
-            else:
-                ke_retrieved = results[0][number_operating_point]
-                PLC_WRITE_DATA['vals'][0]['id'] = my_mqtt_client.IDDict.get(variable_Ke)
-                PLC_WRITE_DATA['vals'][0]['val'] = ke_retrieved
-
-                Ku_retrieved = json.loads(results[0][number_operating_point+1])
-                for i in range(0,D-1):
-                    index = my_mqtt_client.IDDict.get(f"{variable_Ku}[{i}]")
-                    PLC_WRITE_DATA["vals"].append({"id": index, "val": Ku_retrieved[i]})
-
-                PLC_WRITE_DATA["vals"].append({"id": my_mqtt_client.IDDict.get(variable_state), "val": 0})
-
-                PLC_WRITE_DATA_Str = json.dumps(PLC_WRITE_DATA)
-                my_mqtt_client.client.publish(write_topic, PLC_WRITE_DATA_Str)
-                PLC_WRITE_DATA = {"seq": 1, "vals": [{"id": "", "val": ""}]}
-
         # Process parameters calculations using read step response vector and parameters from /cfg-data/param.json
         elif temp_Data[0] == 4:
             s = temp_Data[number_operating_point+1:number_operating_point+1+max(N,D)]
@@ -323,16 +274,6 @@ def main():
             my_mqtt_client.client.publish(write_topic, PLC_WRITE_DATA_Str)
             PLC_WRITE_DATA = {"seq": 1, "vals": [{"id": "", "val": ""}]}
             
-            # Write parameters to database
-            if reg_Param[1] != 0 and len(reg_Param[0]) != 0:
-                Ke_json = json.dumps(reg_Param[0].tolist())
-                insert_columns = ", ".join([f"Operating_Point_{i+1}" for i in range(number_operating_point)])
-                insert_placeholders = ", ".join(["?" for _ in range(number_operating_point+2)])
-                query_insert = f"INSERT INTO Parameters ({insert_columns}, Ke, Ku) VALUES ({insert_placeholders});"
-                temp_tuple = list(temp_Data[1:1 + number_operating_point]) + [reg_Param[1]] + [Ke_json]
-                cursor.execute(query_insert, tuple(temp_tuple,))
-                db.commit()
-
         sleep(1)
 
 if __name__ == "__main__":
