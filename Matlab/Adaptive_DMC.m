@@ -234,7 +234,7 @@ for i=1:n
     
     F = OR*F_max/100;
     tau = 19.08*F^-0.4293 - 4.042;
-    tau0 = 11.93*F^-0.78 + 2.37;
+    tau0 = 11.93*F^-0.78 + 2.73;
 
     x = RungeKutta(x, T0, OR, Ph, tau);
     y(i + round(tau0*10):i+round(tau0*10)+30) = x(1);

@@ -5,22 +5,44 @@
     "Metadata_Topic": "ie/m/j/simatic/v1/s7c1/dp",
     "Read_Topic": "ie/d/j/simatic/v1/s7c1/dp/r/myPLC/default",
     "Write_Topic": "ie/d/j/simatic/v1/s7c1/dp/w/myPLC",
-    "Number_Variables_Operating_Point": 2,
-    "Variables_Operating_Point": [
-        "Data_DB.Temperature_OperatingPoint",
-        "Data_DB.Flow"
+    "Variables": [
+        "Data_DB.Manual",
+        "Data_DB.OR",
+        "Data_DB.Flow",
+        "Data_DB.Flow_min",
+        "Data_DB.Flow_max",
+        "Data_DB.Temperature_SetPoint",
+        "Data_DB.Temperature_In",
+        "Data_DB.Power",
+        "Data_DB.Power_Nominal",
+        "Data_DB.Density",
+        "Data_DB.Specific_Heat",
+        "Data_DB.Volume"
     ],
     "Variable_Process_Value": "Data_DB.Temperature_Out",
-    "Variable_Control": "Data_DB.Power",
-    "Variable_Clear_Database": "Data_DB.Clear_Database",
+    "Variable_Control": "Data_DB.OR",
     "DMC_Parameters": [
         {
-            "Sampling_Time": 1,
-            "N": 59,
+            "Sampling_Time": 1.3,
+            "N": 142,
             "Nu": 2,
-            "D": 133,
-            "N1": 22,
-            "l": 1.84
+            "D": 347,
+            "N1": [
+                [18, 15, 13, 11, 10, 9, 9, 8],
+                [23, 20, 17, 15, 14, 12, 12, 11],
+                [28, 24, 20, 18, 16, 15, 14, 13],
+                [33, 27, 24, 21, 19, 17, 16, 15],
+                [37, 31, 27, 24, 21, 20, 18, 17],
+                [40, 34, 29, 26, 24, 22, 20, 19]
+            ],
+            "l": [
+                [0.1497, 0.0855, 0.0556, 0.0392, 0.0292, 0.0227, 0.182, 0.015],
+                [1.3609, 0.7736, 0.5004, 0.3512, 0.2607, 0.2018, 0.1611, 0.1319],
+                [5.4639, 3.1006, 2.0019, 1.4025, 1.0395, 0.8029, 0.64, 0.523],
+                [15.2069, 8.6218, 5.5615, 3.8926, 2.8825, 2.2244, 1.7715, 1.4463],
+                [34.2482, 19.4113, 12.5141, 8.7538, 6.4784, 4.9964, 3.9767, 3.2448],
+                [67.1252, 38.0601, 24.5286, 17.1514, 12.6881, 9.7816, 7.7822, 6.3474]
+            ]
         }
     ]
 }

@@ -14,8 +14,11 @@ PLC_DATA_FORMAT = {"seq": 1, "vals": [{"id": "", "val": ""}]}
 
 # Create global variable for publish/subscribe PLC data
 global Data
+global s
+
 # Create semaphore for Data access
 Semaphore_Data = Semaphore()
+Semaphore_s = Semaphore()
 
 #============================
 # MQTT Client
@@ -24,7 +27,7 @@ Semaphore_Data = Semaphore()
 class mqttclient:
 
     # Initialize mqttclient object
-    def __init__(self,clientname,broker, user, password, metadata_topic, read_topic, write_topic, plc_connection, variable_array, number_operating_point):
+    def __init__(self,clientname,broker, user, password, metadata_topic, read_topic, write_topic, plc_connection):
         self.IDDict = {}
         self.broker = broker
         self.mqtt_user = user
@@ -33,8 +36,6 @@ class mqttclient:
         self.read_topic = read_topic
         self.write_topic = write_topic
         self.plc_connection = plc_connection
-        self.variable_array = variable_array
-        self.number_operating_point = number_operating_point
         self.clientname = clientname
         self.client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
         self.client.on_connect = self.on_connect
@@ -65,13 +66,9 @@ class mqttclient:
                 id = msg["vals"][i].get("id", None)
                 name = next((key for key, value in self.IDDict.items() if value == id), None)
 
-                # Put tag value in the correct spot in Data
-                for j in range(len(self.variable_array)):
-                    if name.startswith(self.variable_array[j]):
-                        Semaphore_Data.acquire()
-                        Data[j] = int(msg["vals"][i].get("val", None))
-                        Semaphore_Data.release()                  
-                        break
+                Semaphore_Data.acquire()
+                Data[name] = msg["vals"][i].get("val", None)
+                Semaphore_Data.release() 
 
     # Function to call whenever connection is established
     def on_connect(self, client, userdata, flags, rc, properties):
@@ -120,20 +117,94 @@ def getDict(metadata, connection_name):
 
     return(nameIDMap)
 
-# Check if database exists / if not create the correct one
-def check_db_connection(db_path):
-    if not os.path.exists(db_path):
-        db = Create_DB(db_path)
-    else:
-        db = sqlite3.connect(db_path)
-    return db
-
-# Read json file
 def read_parameter(jsonfile):
     with open(jsonfile) as params:
         data = json.load(params)
         return data
     
+#============================
+# Acquire step response sequence
+#============================
+    
+def StepResponseAcquire(my_mqtt_client, write_topic, Sampling_Time, D):
+    global Data
+    global s
+    PLC_WRITE_DATA = PLC_DATA_FORMAT
+
+    CV = np.zeros(2)
+
+    for i in range (30, 101, 10):
+        i_idx = int((i-30)/10)
+
+        PLC_WRITE_DATA['vals'][0]['id'] = my_mqtt_client.IDDict.get("Data_DB.Power")
+        PLC_WRITE_DATA['vals'][0]['val'] = i
+        PLC_WRITE_DATA_Str = json.dumps(PLC_WRITE_DATA)
+        my_mqtt_client.client.publish(write_topic, PLC_WRITE_DATA_Str)
+
+        k_start = 0
+
+        for j in range (70, 81, 10):
+            j_idx = int((j-30)/10)
+            
+            for k in range(k_start, 2*D):
+                Semaphore_Data.acquire()
+                temp_Data = Data
+                Semaphore_Data.release()
+
+                if k == 0 or k == D:
+                    alpha = temp_Data["Data_DB.Flow_max"]/(100*60*temp_Data["Data_DB.Volume"])
+                    beta = temp_Data["Data_DB.Power_Nominal"]*i/(100*temp_Data["Data_DB.Specific_Heat"]*temp_Data["Data_DB.Density"]*temp_Data["Data_DB.Volume"])
+                    G = -0.0002347*i + 1.012
+
+                    PLC_WRITE_DATA['vals'][0]['id'] = my_mqtt_client.IDDict.get("Data_DB.OR")
+                    if k == 0:
+                        CV[0] = 1/(alpha/(beta*G)*(j-5) - alpha/beta*temp_Data["Data_DB.Temperature_In"])
+                        PLC_WRITE_DATA['vals'][0]['val'] = CV[0]
+                    elif k == D:
+                        CV[1] = 1/(alpha/(beta*G)*(j+5) - alpha/beta*temp_Data["Data_DB.Temperature_In"])
+                        PLC_WRITE_DATA['vals'][0]['val'] = CV[1]
+                    PLC_WRITE_DATA_Str = json.dumps(PLC_WRITE_DATA)
+                    my_mqtt_client.client.publish(write_topic, PLC_WRITE_DATA_Str)
+
+                if k == D:
+                    Temperature_Norm = temp_Data["Data_DB.Temperature_Out"]
+
+                if k >= D:
+                    k_idx = k-D
+
+                    if k == int(1.8*D):
+                        pass
+
+                    Semaphore_s.acquire()
+                    s[j_idx,i_idx,k_idx] = (temp_Data["Data_DB.Temperature_Out"] - Temperature_Norm) / (CV[1] - CV[0])
+                    Semaphore_s.release()
+
+                if temp_Data["Data_DB.Manual"] == 0:
+                    return 1
+
+                sleep(Sampling_Time)
+
+            CV[0] = CV[1]
+
+            db = sqlite3.connect("./Step_Response.db")
+            cursor = db.cursor()
+
+            where_conditions = "T_SP = ? AND Power = ?"
+            query = f"SELECT * FROM Step_Response WHERE {where_conditions};"
+            cursor.execute(query, tuple([j,i],))
+            results = cursor.fetchall()
+
+            if len(results) == 0:
+                SR_json = json.dumps(s[j_idx,i_idx].tolist())
+                insert_placeholders = ", ".join(["?" for _ in range(3)])
+                query_insert = f"INSERT INTO Step_Response (T_SP, Power, SR) VALUES ({insert_placeholders});"
+                temp_tuple = list([j,i]) + [SR_json]
+                cursor.execute(query_insert, tuple(temp_tuple,))
+                db.commit()
+            
+            k_start = D
+    return 0
+
 #============================
 # DMC Parameters calculation
 #============================
@@ -141,47 +212,88 @@ def read_parameter(jsonfile):
 # Calculate ke and Ku parameters
 def DMCRegulatorParameters(s, D, N, N1, Nu, l):
 
-    # Calculate MP matrix
-    MP = np.zeros((N-N1+1, D-1))
-    for i in range(0,N-N1+1):
-        for j in range(0,D-1):
-            if i+j+N1 < D:
-                MP[i,j] = s[i+j+N1] - s[j]
-            else:
-                MP[i,j] = s[D-1] - s[j]
-                
-    # Calculate M matrix
-    M = np.zeros((N-N1+1, Nu))
-    for i in range(0,Nu):
-        for j in range(i,N-N1+1):
-            M[j,i] = s[j+N1-i-1]
-            
-    # Calculate ke and Ku
-    M_temp = M.T @ M
-    eye_size = len(M_temp)
+    [rows, cols] = s.shape[0], s.shape[1]
+    ke = np.zeros((rows, cols))
+    ku = np.zeros((rows, cols, D))
 
-    K_temp = np.linalg.inv(M_temp + l*np.eye(eye_size))
-    K = K_temp @ M.T
+    for m in range(cols):
+        for n in range(rows):
+            # Calculate MP matrix
+            MP = np.zeros((N-N1[n][m], D))
+            for i in range(0,N-N1[n][m]):
+                for j in range(0,D-1):
+                    if i+j+N1[n][m] < D:
+                        MP[i,j] = s[n][m][i+j+N1[n][m]] - s[n][m][j]
+                    else:
+                        MP[i,j] = s[n][m][D-1] - s[n][m][j]
+                        
+            # Calculate M matrix
+            M = np.zeros((N-N1[n][m], Nu))
+            for i in range(0,Nu):
+                for j in range(i,N-N1[n][m]):
+                    M[j,i] = s[n][m][j+N1[n][m]-i-1]
+                    
+            # Calculate ke and Ku
+            M_temp = M.T @ M
+            eye_size = len(M_temp)
 
-    ku = K[0] @ MP
-    ke = np.sum(K[0])
+            K_temp = np.linalg.inv(M_temp + l[n][m]*np.eye(eye_size))
+            K = K_temp @ M.T
 
-    return ku, ke
+            ku[n,m] = K[0] @ MP
+            ke[n,m] = np.sum(K[0])
+
+    return ke, ku
+
+#============================
+# DMC Parameters calculation for specific Setpoint
+#============================
+
+def CalculateParameters(Temperature_Setpoint, Power, Ke_array, Ku_array):
+
+    Temperature_Setpoint_array = np.array([30, 40, 50, 60, 70, 80])
+    Power_array = np.array([30, 40, 50, 60, 70, 80, 90, 100])
+
+    Power_indices = np.where(Power_array >= Power)[0]
+    Power_idx = Power_indices[0]
+    Temperature_Setpoint_indices = np.where(Temperature_Setpoint_array >= Temperature_Setpoint)[0]
+    Temperature_Setpoint_idx = Temperature_Setpoint_indices[0]
+
+    x1 = Power_array[Power_idx - 1]
+    x2 = Power_array[Power_idx]
+    y1 = Temperature_Setpoint_array[Temperature_Setpoint_idx - 1]
+    y2 = Temperature_Setpoint_array[Temperature_Setpoint_idx]
+
+    Q11 = Ke_array[Temperature_Setpoint_idx - 1, Power_idx - 1]
+    Q12 = Ke_array[Temperature_Setpoint_idx - 1, Power_idx]
+    Q21 = Ke_array[Temperature_Setpoint_idx, Power_idx - 1]
+    Q22 = Ke_array[Temperature_Setpoint_idx, Power_idx]
+    Ke = 1/((x2-x1)*(y2-y1)) * (Q22*(Power-x1)*(Temperature_Setpoint-y1) + Q21*abs(x2-Power)*abs(Temperature_Setpoint-y1) + Q12*abs(Power-x1)*abs(y2-Temperature_Setpoint) + Q11*abs(x2-Power)*abs(y2-Temperature_Setpoint))
+
+    D = Ku_array.shape[2]
+    Ku = np.zeros(D)
+    for i in range(D):
+        Q11 = Ku_array[Temperature_Setpoint_idx - 1, Power_idx - 1, i]
+        Q12 = Ku_array[Temperature_Setpoint_idx - 1, Power_idx, i]
+        Q21 = Ku_array[Temperature_Setpoint_idx, Power_idx - 1, i]
+        Q22 = Ku_array[Temperature_Setpoint_idx, Power_idx, i]
+        Ku[i] = 1/((x2-x1)*(y2-y1)) * (Q22*(Power-x1)*(Temperature_Setpoint-y1) + Q21*(x2-Power)*(Temperature_Setpoint-y1) + Q12*(Power-x1)*(y2-Temperature_Setpoint) + Q11*(x2-Power)*(y2-Temperature_Setpoint))
+
+    return Ke, Ku
 
 #============================
 # Main Function
 #============================
 
 def main():
-    # Connect to database, establish connection with MQTT broker using parameters from /cfg-data/param.json
+
+    # Establish connection with MQTT broker using parameters from /cfg-data/param.json
     global Data
+    global s
 
     PLC_WRITE_DATA = PLC_DATA_FORMAT
 
-    db = check_db_connection("./DMC_Parameters_DB.db")
-    cursor = db.cursor()
-
-    params = read_parameter("/cfg-data/param.json")
+    params = read_parameter("./cfg-data/param.json")
 
     mqtt_broker_server = params["MQTT_Broker"]
     mqtt_user = params["User"]
@@ -189,92 +301,88 @@ def main():
     meta_data_topic = params["Metadata_Topic"]
     read_topic = params["Read_Topic"]
     write_topic = params["Write_Topic"]
-    number_operating_point = params["Number_Variables_Operating_Point"]
-    variables_operating_point = []
-    for i in range(number_operating_point):
-        variables_operating_point.append(params["Variables_Operating_Point"][i])
-    variable_process_value = params["Variable_Step_Response"]
+    variables = params["Variables"]
     variable_control = params["Variable_Control"]
-    variable_clear_database = params["Variable_Clear_Database"]
-    variable_array = [variable_process_value, variable_clear_database, *variables_operating_point]
     N = params["DMC_Parameters"][0].get("N")
     Nu = params["DMC_Parameters"][0].get("Nu")
     D = params["DMC_Parameters"][0].get("D")
     N1 = params["DMC_Parameters"][0].get("N1")
     l = params["DMC_Parameters"][0].get("l")
-    Sampling_Time = params["DMC_Parameters"][0].get("Sampling_Time")
+    Sampling_Time = params["DMC_Parameters"][0].get("Sampling_Time")/10
+
+    Data = dict.fromkeys(variables, None)
+    s = np.zeros((6, 8, D))
 
     connection_name = write_topic.split("/")
     connection_name = connection_name[len(connection_name)-1]
 
     my_mqtt_client = mqttclient('dmc', mqtt_broker_server, mqtt_user, mqtt_password, meta_data_topic,
-                                read_topic, write_topic, connection_name, variable_array, number_operating_point)
+                                read_topic, write_topic, connection_name)
     my_mqtt_client.start_connection()
 
-    # Create required variables
-    Semaphore_Data.acquire()
-    Data = np.zeros(2 + number_operating_point)  
-    Semaphore_Data.release()
+    Setpoint_prev = np.zeros(2)
 
-    State = 0
-    Ke = 0
-    Ku = np.zeros(D)
-    Control = 0
-    Operating_Variables_Prev = np.zeros(number_operating_point)
+    Semaphore_Data.acquire()
+    temp_Data = Data
+    Semaphore_Data.release()
 
     sleep(Sampling_Time)
 
-    Semaphore_Data.acquire()
-    Operating_Variables_Prev = Data[2:]
-    Semaphore_Data.release()
-
-    # Wait for DMC parameters request
     while True:
+        Setpoint_prev = [temp_Data["Data_DB.Temperature_SetPoint"], temp_Data["Data_DB.Power"]]
         Semaphore_Data.acquire()
-        PV = Data[0]
-        Clear_Database = Data[1]
-        Operating_Variables = Data[2:]
+        temp_Data = Data
         Semaphore_Data.release()
+        Setpoint = [temp_Data["Data_DB.Temperature_SetPoint"], temp_Data["Data_DB.Power"]]
 
-        # Check operating point change
-        if State == 0 and (Operating_Variables != Operating_Variables_Prev).any:
-            where_conditions = " AND ".join([f"Operating_Point_{i+1} = ?" for i in range(number_operating_point)])
-            query = f"SELECT * FROM Parameters WHERE {where_conditions};"
-            cursor.execute(query, tuple(Operating_Variables,))
-            results = cursor.fetchall()
+        if temp_Data["Data_DB.Manual"] == 1:
+            # error = StepResponseAcquire(my_mqtt_client, write_topic, Sampling_Time, D)
+            # print("Error code = " + str(error))
 
-            if len(results) == 0:
-                if Ke == 0:
-                    State = 1
-                else:
-                    State = 2
-            else:
-                Ke = results[0][number_operating_point]
-                Ku = json.loads(results[0][number_operating_point+1])
-                State = 0
-        Operating_Variables_Prev = Operating_Variables
+            db = sqlite3.connect("./Step_Response.db")
+            cursor = db.cursor()
 
-        if State == 1:
-            Control = (0.965 * Operating_Variables[0] - 17) / ((3 * 12000) / (5 * Operating_Variables[1] * 4200 * 1))
+            for i in range(30, 101, 10):
+                for j in range(30, 81, 10):
+                    where_conditions = "T_SP = ? AND Power = ?"
+                    query = f"SELECT * FROM Step_Response WHERE {where_conditions};"
+                    cursor.execute(query, tuple([j,i],))
+                    results = cursor.fetchall()
 
-        # Process parameters calculations using read step response vector and parameters from /cfg-data/param.json
-        elif temp_Data[0] == 4:
-            s = temp_Data[number_operating_point+1:number_operating_point+1+max(N,D)]
+                    i_idx = int((results[0][1]-30)/10)
+                    j_idx = int((results[0][0]-30)/10)
+                    s[j_idx,i_idx] = json.loads(results[0][2])
 
-            reg_Param = DMCRegulatorParameters(s, D, N, N1, Nu, l)
-            PLC_WRITE_DATA['vals'][0]['id'] = my_mqtt_client.IDDict.get(variable_Ke)
-            PLC_WRITE_DATA['vals'][0]['val'] = reg_Param[1]
+            [Ke_array, Ku_array] = DMCRegulatorParameters(s, D, N, N1, Nu, l)
 
-            for i in range(0,D-1):
-                index = my_mqtt_client.IDDict.get(f"{variable_Ku}[{i}]")
-                PLC_WRITE_DATA["vals"].append({"id": index, "val": reg_Param[0][i]})
+            [Ke, Ku] = CalculateParameters(Setpoint[0], Setpoint[1], Ke_array, Ku_array)
             
-            PLC_WRITE_DATA["vals"].append({"id": my_mqtt_client.IDDict.get(variable_state), "val": 0})
+            PLC_WRITE_DATA['vals'][0]['id'] = my_mqtt_client.IDDict.get("DMC_Parameters_DB.Ke")
+            PLC_WRITE_DATA['vals'][0]['val'] = Ke
+
+            for i in range(0,D):
+                index = my_mqtt_client.IDDict.get(f"{"DMC_Parameters_DB.Ku"}[{i}]")
+                PLC_WRITE_DATA["vals"].append({"id": index, "val": Ku[i]})
+            
+            PLC_WRITE_DATA["vals"].append({"id": my_mqtt_client.IDDict.get("Data_DB.Manual"), "val": 0})
             PLC_WRITE_DATA_Str = json.dumps(PLC_WRITE_DATA)
             my_mqtt_client.client.publish(write_topic, PLC_WRITE_DATA_Str)
-            PLC_WRITE_DATA = {"seq": 1, "vals": [{"id": "", "val": ""}]}
-            
-        sleep(1)
 
+        if Setpoint != Setpoint_prev:
+            [Ke, Ku] = CalculateParameters(Setpoint[0], Setpoint[1], Ke_array, Ku_array)
+
+            PLC_WRITE_DATA['vals'][0]['id'] = my_mqtt_client.IDDict.get("DMC_Parameters_DB.Ke")
+            PLC_WRITE_DATA['vals'][0]['val'] = Ke
+
+            for i in range(0,D-1):
+                index = my_mqtt_client.IDDict.get(f"{"DMC_Parameters_DB.Ku"}[{i}]")
+                PLC_WRITE_DATA["vals"].append({"id": index, "val": Ku[i]})
+            
+            PLC_WRITE_DATA["vals"].append({"id": my_mqtt_client.IDDict.get("Data_DB.Manual"), "val": 0})
+            PLC_WRITE_DATA_Str = json.dumps(PLC_WRITE_DATA)
+            my_mqtt_client.client.publish(write_topic, PLC_WRITE_DATA_Str)
+
+        sleep(Sampling_Time)
+    
 if __name__ == "__main__":
     main()
