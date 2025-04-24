@@ -328,8 +328,15 @@ def main():
 
     sleep(Sampling_Time)
 
+    # while True:
+    #     PLC_WRITE_DATA['vals'][0]['id'] = my_mqtt_client.IDDict.get("Data_DB.Manual")
+    #     PLC_WRITE_DATA['vals'][0]['val'] = 10
+    #     PLC_WRITE_DATA_Str = json.dumps(PLC_WRITE_DATA)
+    #     my_mqtt_client.client.publish(write_topic, PLC_WRITE_DATA_Str)
+    #     sleep(2)
+
     while True:
-        Setpoint_prev = [temp_Data["Data_DB.Temperature_SetPoint"], temp_Data["Data_DB.Power"]]
+        sleep(1)
         Semaphore_Data.acquire()
         temp_Data = Data
         Semaphore_Data.release()
@@ -356,7 +363,7 @@ def main():
             [Ke_array, Ku_array] = DMCRegulatorParameters(s, D, N, N1, Nu, l)
 
             [Ke, Ku] = CalculateParameters(Setpoint[0], Setpoint[1], Ke_array, Ku_array)
-            
+              
             PLC_WRITE_DATA['vals'][0]['id'] = my_mqtt_client.IDDict.get("DMC_Parameters_DB.Ke")
             PLC_WRITE_DATA['vals'][0]['val'] = Ke
 
@@ -368,7 +375,9 @@ def main():
             PLC_WRITE_DATA_Str = json.dumps(PLC_WRITE_DATA)
             my_mqtt_client.client.publish(write_topic, PLC_WRITE_DATA_Str)
 
-        if Setpoint != Setpoint_prev:
+        if Setpoint != [None, None] and Setpoint_prev != [None, None] and Setpoint != Setpoint_prev:
+            [Ke_array, Ku_array] = DMCRegulatorParameters(s, D, N, N1, Nu, l)
+            
             [Ke, Ku] = CalculateParameters(Setpoint[0], Setpoint[1], Ke_array, Ku_array)
 
             PLC_WRITE_DATA['vals'][0]['id'] = my_mqtt_client.IDDict.get("DMC_Parameters_DB.Ke")
@@ -382,7 +391,8 @@ def main():
             PLC_WRITE_DATA_Str = json.dumps(PLC_WRITE_DATA)
             my_mqtt_client.client.publish(write_topic, PLC_WRITE_DATA_Str)
 
-        sleep(Sampling_Time)
+        Setpoint_prev = Setpoint
+        sleep(1)
     
 if __name__ == "__main__":
     main()
