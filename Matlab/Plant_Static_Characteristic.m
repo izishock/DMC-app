@@ -4,7 +4,7 @@ close all
 clc
 
 % Zakres F i stałe P = 50
-F = linspace(1, 14, 1000);
+F = linspace(2, 12, 1000);
 P = 50 * ones(size(F));
 
 % Parametry
@@ -20,14 +20,14 @@ T0_func = @(P, Tin, F, Pnom, cw, ro) -0.0002347*P.*Tin + 1.012*Tin + ...
 % Obliczanie T0 dla P=50 i różnych F
 T0_values = T0_func(P, Tin, F, Pnom, cw, ro);
 
-% Znalezienie punktu, w którym T0 = 40
+% Znalezienie punktu, w którym T0 = 50
 F_symbolic = sym('F');
 P_fixed = 50;
 T0_sym = -0.0002347*P_fixed*Tin + 1.012*Tin + ...
     (3*Pnom)/(5*cw*ro)*(-0.0002347*P_fixed^2/F_symbolic + 1.012*P_fixed/F_symbolic);
 
-% Rozwiązanie T0 = 40
-F0 = double(vpasolve(T0_sym == 30, F_symbolic, [1 14]));
+% Rozwiązanie T0 = 50
+F0 = double(vpasolve(T0_sym == 40, F_symbolic, [2 12]));
 
 % Obliczenie T0 i pochodnej w tym punkcie
 T0_at_F0 = double(subs(T0_sym, F_symbolic, F0));
@@ -55,7 +55,7 @@ clear all
 close all
 clc
 
-[F, P] = meshgrid(2:0.1:10, 0:0.1:100);
+[F, P] = meshgrid(0.5:0.1:10, 0:0.1:100);
 
 % Parametry
 Tin = 15; % Parametr Tin
@@ -95,7 +95,7 @@ dT0_dF_at_point = double(subs(dT0_dF, {P, F}, {P_target, F_target})); % Pochodna
 T0_lin = T0_at_point + dT0_dP_at_point * (P - P_target) + dT0_dF_at_point * (F - F_target);
 
 % Tworzenie siatki dla funkcji nieliniowej (pełny zakres dla P i F)
-[P_grid_full, F_grid_full] = meshgrid(linspace(0, 100, 30), linspace(2, 10, 30));
+[P_grid_full, F_grid_full] = meshgrid(linspace(0, 100, 100), linspace(0.5, 12, 100));
 T0_full = double(subs(T0_symbolic, {P, F}, {P_grid_full, F_grid_full}));
 
 % Tworzenie siatki dla funkcji zlinearyzowanej (w zakresie linearyzacji)

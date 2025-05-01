@@ -221,6 +221,8 @@ for i=1:n
     if i == 15000
         T_OP = T_OP_next;
 
+        dOR_prev(:) = 0;
+
         % T_OP_idx = find(T_OP_array >= T_OP, 1);
         % Ke = (Ke_params(T_OP_idx,Ph_idx)-Ke_params(T_OP_idx-1,Ph_idx))/(T_OP_array(T_OP_idx)-T_OP_array(T_OP_idx-1))*T_OP + ...
         %     (Ke_params(T_OP_idx-1,Ph_idx)*T_OP_array(T_OP_idx)-Ke_params(T_OP_idx,Ph_idx)*T_OP_array(T_OP_idx-1))/(T_OP_array(T_OP_idx)-T_OP_array(T_OP_idx-1));

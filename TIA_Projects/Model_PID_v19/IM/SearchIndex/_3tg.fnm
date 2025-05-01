@@ -1,0 +1,18 @@
+þÿÿÿ¶###id###VisulizationRootBrowsableId###TargetIdNameText.0Text.1Text.2
+AlarmClass-###SearchableNonTechnicalFieldNamesOfDocument###ParentIds###ImmediateParentId###ReferenceFieldIdsDisplayName###SearchFilterIdsTitleLanguageVersionConstant nameEvent class###UpdatableParentIdInterfaceMember_NameInterfaceMember_DatatypeInterfaceMember_ValueInterfaceMember_CommentNetwork titleLADFBD CodeSCL CodeAuthorFamilyUser-defined IDInstance DBNameInFunctionalViewNameInDBFullNameInDBCommentDatatypeValueAcknowledgementGroupTextInvalidAttempts	ValidDaysWarningDaysGenerationsMinNumPsswd
+ServerName
+PortNumberWindowsDomainStationNamePartnerNameNodeNameAcknowledgementModelIdEmailAddressAcknowledgedText
+ComingText	GoingTextCommonAlarmClassPathRestartOptionsStorageMediaThresholdBehaviorAcquisitionModeLoggingCycle
+ProcessTagProcessTagTypeNameToleranceOption	CycleUnit	CycleTimeNumber	ShortName
+LogoutTime	BackColor	GridColorAdaptPicture
+AutoSizingBackFillStyleBorderColor	EdgeStyleFlashingLayerPictureTransparentColorUITypeEditorBitPositionUITypeEditorTagExpressionUITypeEditorStartvalueUITypeEditorEndvalueBorderBackColorButtonBackColorButtonBackFillStyleButtonBorderBackColorButtonBorderColorButtonEdgeStyleButtonFirstGradientColorButtonMiddleGradientColorButtonSecondGradientColor
+FocusColorFontGridlineAxisGridlineColorGridlineFillColorGridlineStyleHelpText
+RulerColor
+ScaleColorTableBackColorTableEvenRowBackColor	TableFontTableForeColorTableGridlineColorTableHeaderBackColorTableHeaderBackFillStyleTableHeaderBorderBackColorTableHeaderBorderColorTableHeaderEdgeStyleTableHeaderFirstGradientColorTableHeaderFontTableHeaderForeColorTableHeaderMiddleGradientColorTableHeaderSecondGradientColorTimeAxisModeTimeAxisSideAboveUpperLimitColorBelowLowerLimitColor
+DataFormat	ForeColorFormatPatternHorizontalAlignmentModeTextOrientationUnitVerticalAlignmentPropertyNameTagValueForPropertyTagPageText
+PictureOff	PictureOnScrollBarOrientationFirstGradientColorHorizontalPictureAlignmentMiddleGradientColorPictureAutoSizingSecondGradientColorTextOffTextOnVerticalPictureAlignment	FunctionsCaptionColorCaptionFontCaptionTextInnerBackColorOffInnerBackColorOnSwitchOrientationDataTypeTagAddressPanelInfoAcquisitionTriggerModeAcquisitionCycleConfirmationTypeCodingPlcNameControllerTagLimitHighConstantLimitHighLowConstantLimitLowHighConstantLimitLowConstant	JobNumber
+StartValueAddressAccessMode
+Connection
+LineColor1
+LineColor2OperatableAreaColor
+VisibilityPreCodeHeaderCodeFooter###ReconstitutionDataIDAssociatedCultureFieldIdAssociatedProjectVersion!AssociatedIndexDataVersionFieldId,AssociatedTechnicalFieldNamesHashCodeFieldId-AssociatedTechnicalFieldContentVersionFieldIdIndexAtomStore
