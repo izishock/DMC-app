@@ -130,7 +130,6 @@ def read_parameter(jsonfile):
 def StepResponseAcquire(my_mqtt_client, write_topic, Sampling_Time, D):
     global Data
     global s
-    PLC_WRITE_DATA = copy.deepcopy(PLC_DATA_FORMAT)
 
     CV = np.zeros(2)
 
@@ -150,6 +149,7 @@ def StepResponseAcquire(my_mqtt_client, write_topic, Sampling_Time, D):
     for i in range (int(SV[0,0]), int(SV[0,1])+1, int(SV[0,2])):
         i_idx = int((i-SV[0,0])/SV[0,2])
 
+        PLC_WRITE_DATA = copy.deepcopy(PLC_DATA_FORMAT)
         PLC_WRITE_DATA['vals'][0]['id'] = my_mqtt_client.IDDict.get("Data_DB.Power")
         PLC_WRITE_DATA['vals'][0]['val'] = i
         PLC_WRITE_DATA_Str = json.dumps(PLC_WRITE_DATA)
@@ -170,6 +170,7 @@ def StepResponseAcquire(my_mqtt_client, write_topic, Sampling_Time, D):
                     beta = temp_Data["Data_DB.Power_Nominal"]*i/(100*temp_Data["Data_DB.Specific_Heat"]*temp_Data["Data_DB.Density"]*temp_Data["Data_DB.Volume"])
                     G = -0.0002347*i + 1.012
 
+                    PLC_WRITE_DATA = copy.deepcopy(PLC_DATA_FORMAT)
                     PLC_WRITE_DATA['vals'][0]['id'] = my_mqtt_client.IDDict.get("Data_DB.OR")
                     if k == 0:
                         CV[0] = 1/(alpha/(beta*G)*(j-5) - alpha/beta*temp_Data["Data_DB.Temperature_In"])
@@ -185,9 +186,6 @@ def StepResponseAcquire(my_mqtt_client, write_topic, Sampling_Time, D):
 
                 if k >= D:
                     k_idx = k-D
-
-                    if k == int(1.8*D):
-                        pass
 
                     Semaphore_s.acquire()
                     s[j_idx,i_idx,k_idx] = (temp_Data["Data_DB.Temperature_Out"] - Temperature_Norm) / (CV[1] - CV[0])
@@ -323,7 +321,7 @@ def main():
     D = params["DMC_Parameters"][0].get("D")
     N1 = params["DMC_Parameters"][0].get("N1")
     l = params["DMC_Parameters"][0].get("l")
-    Sampling_Time = params["DMC_Parameters"][0].get("Sampling_Time")/10
+    Sampling_Time = params["DMC_Parameters"][0].get("Sampling_Time")
 
     Data = dict.fromkeys(variables, None)
     s = np.zeros((6, 8, D))
@@ -439,7 +437,7 @@ def main():
 
                 where_conditions = "T_SP = ? AND Power = ?"
                 query = f"SELECT * FROM DMC_Parameters_DB WHERE {where_conditions};"
-                cursor.execute(query, (Setpoint[1], Setpoint[0]))
+                cursor.execute(query, (Setpoint[0], Setpoint[1]))
                 results = cursor.fetchall()
 
                 if len(results) == 0:

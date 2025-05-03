@@ -23,7 +23,7 @@
     "Variable_Control": "Data_DB.OR",
     "DMC_Parameters": [
         {
-            "Sampling_Time": 1.3,
+            "Sampling_Time": 0.13,
             "N": 142,
             "Nu": 2,
             "D": 347,

@@ -17,8 +17,10 @@ x(1) = T_in;
 x(3) = T_in;
 y = zeros(2*n,1) + T_in;
 
-Ph_array = [30 40 50 60 70 80 90 100];
-T_OP_array = [30 40 50 60 70 80];
+% Ph_array = [30 40 50 60 70 80 90 100];
+% T_OP_array = [30 40 50 60 70 80];
+Ph_array = 80;
+T_OP_array = 50;
 
 u = zeros(length(T_OP_array), length(Ph_array));
 
@@ -34,10 +36,10 @@ for k=1:length(Ph_array)
         OR = 1/(alpha/(beta*G)*T_OP - alpha/beta*T_in);
         for i=1:2*n
             if i < n
-                OR = 1/(alpha/(beta*G)*(T_OP-5) - alpha/beta*T_in);
+                OR = 1/(alpha/(beta*G)*(T_OP-10) - alpha/beta*T_in);
                 u_norm(1) = OR;
             else
-                OR = 1/(alpha/(beta*G)*(T_OP+5) - alpha/beta*T_in);
+                OR = 1/(alpha/(beta*G)*(T_OP+10) - alpha/beta*T_in);
                 u_norm(2) = OR;
             end
             F = OR*F_max/100;
@@ -148,7 +150,7 @@ x(3) = T0;
 y = zeros(n,1) + T0;
 u_vec = zeros(n,1);
 
-Ph = 50;
+Ph = 80;
 T_OP = 45;
 T_OP_prev = T_OP;
 T_OP_next = 50;
