@@ -1,11 +1,11 @@
 %% 2D - Full Flow Range and specific Heat
 clear all
-close all
+% close all
 clc
 
 % Zakres F i stałe P = 50
-F = linspace(2, 12, 1000);
-P = 50 * ones(size(F));
+F = linspace(1, 12, 1000);
+P = 80 * ones(size(F));
 
 % Parametry
 Tin = 15;
@@ -22,12 +22,12 @@ T0_values = T0_func(P, Tin, F, Pnom, cw, ro);
 
 % Znalezienie punktu, w którym T0 = 50
 F_symbolic = sym('F');
-P_fixed = 50;
+P_fixed = 80;
 T0_sym = -0.0002347*P_fixed*Tin + 1.012*Tin + ...
     (3*Pnom)/(5*cw*ro)*(-0.0002347*P_fixed^2/F_symbolic + 1.012*P_fixed/F_symbolic);
 
 % Rozwiązanie T0 = 50
-F0 = double(vpasolve(T0_sym == 40, F_symbolic, [2 12]));
+F0 = double(vpasolve(T0_sym == 49, F_symbolic, [2 12]));
 
 % Obliczenie T0 i pochodnej w tym punkcie
 T0_at_F0 = double(subs(T0_sym, F_symbolic, F0));
@@ -35,19 +35,19 @@ dT0_dF = diff(T0_sym, F_symbolic);
 dT0_dF_at_F0 = double(subs(dT0_dF, F_symbolic, F0));
 
 % Równanie stycznej
-T0_tangent = T0_at_F0 + dT0_dF_at_F0 * (F(1:500) - F0);
+T0_tangent = T0_at_F0 + dT0_dF_at_F0 * (F(1:400) - F0);
 
 % Wykres
 figure;
 plot(F, T0_values, 'b-', 'LineWidth', 2); hold on;
-plot(F(1:500), T0_tangent, 'r--', 'LineWidth', 2);
+plot(F(1:400), T0_tangent, 'r--', 'LineWidth', 2);
 plot(F0, T0_at_F0, 'ko', 'MarkerSize', 8, 'MarkerFaceColor', 'k');
 xlabel('F_0, l/min');
 yl = sprintf("T_0, %cC", char(176));
 ylabel(yl);
 title('Charakterystyka statyczna obiektu dla zadanej mocy podgrzewacza P_h');
 legend('Temperatura wyjściowa', 'Temperatura wyjściowa po linearyzacji w punkcie pracy');
-xlim([2 max(F)])
+xlim([1.61 max(F)])
 grid on;
 
 %% 3D - Full Power and Flow Range

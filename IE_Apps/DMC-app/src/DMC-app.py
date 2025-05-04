@@ -174,9 +174,13 @@ def StepResponseAcquire(my_mqtt_client, write_topic, Sampling_Time, D):
                     PLC_WRITE_DATA['vals'][0]['id'] = my_mqtt_client.IDDict.get("Data_DB.OR")
                     if k == 0:
                         CV[0] = 1/(alpha/(beta*G)*(j-5) - alpha/beta*temp_Data["Data_DB.Temperature_In"])
+                        if CV[0] > 100:
+                            CV[0] = 100
                         PLC_WRITE_DATA['vals'][0]['val'] = CV[0]
                     elif k == D:
                         CV[1] = 1/(alpha/(beta*G)*(j+5) - alpha/beta*temp_Data["Data_DB.Temperature_In"])
+                        if CV[1] > 100:
+                            CV[1] = 100
                         PLC_WRITE_DATA['vals'][0]['val'] = CV[1]
                     PLC_WRITE_DATA_Str = json.dumps(PLC_WRITE_DATA)
                     my_mqtt_client.client.publish(write_topic, PLC_WRITE_DATA_Str)
@@ -354,21 +358,21 @@ def main():
         if temp_Data["Data_DB.Manual"] == 2:
             PLC_WRITE_DATA = copy.deepcopy(PLC_DATA_FORMAT)
 
-            error = StepResponseAcquire(my_mqtt_client, write_topic, Sampling_Time, D)
+            # error = StepResponseAcquire(my_mqtt_client, write_topic, Sampling_Time, D)
 
-            # db = sqlite3.connect("./Step_Response.db")
-            # cursor = db.cursor()
+            db = sqlite3.connect("./Step_Response.db")
+            cursor = db.cursor()
 
-            # for i in range(30, 101, 10):
-            #     for j in range(30, 81, 10):
-            #         where_conditions = "T_SP = ? AND Power = ?"
-            #         query = f"SELECT * FROM Step_Response WHERE {where_conditions};"
-            #         cursor.execute(query, tuple([j,i],))
-            #         results = cursor.fetchall()
+            for i in range(30, 101, 10):
+                for j in range(30, 81, 10):
+                    where_conditions = "T_SP = ? AND Power = ?"
+                    query = f"SELECT * FROM Step_Response WHERE {where_conditions};"
+                    cursor.execute(query, tuple([j,i],))
+                    results = cursor.fetchall()
 
-            #         i_idx = int((results[0][1]-30)/10)
-            #         j_idx = int((results[0][0]-30)/10)
-            #         s[j_idx,i_idx] = json.loads(results[0][2])
+                    i_idx = int((results[0][1]-30)/10)
+                    j_idx = int((results[0][0]-30)/10)
+                    s[j_idx,i_idx] = json.loads(results[0][2])
 
             [Ke_array, Ku_array] = DMCRegulatorParameters(s, D, N, N1, Nu, l)
 
@@ -476,10 +480,6 @@ def main():
                 for i in range(0,D):
                     index = my_mqtt_client.IDDict.get(f"{"DMC_Parameters_DB.Ku"}[{i}]")
                     PLC_WRITE_DATA["vals"].append({"id": index, "val": Ku[i]})
-
-                for i in range(0,D):
-                    index = my_mqtt_client.IDDict.get(f"{"Data_DB.dOR_prev"}[{i}]")
-                    PLC_WRITE_DATA["vals"].append({"id": index, "val": 0.0})
                 
                 PLC_WRITE_DATA["vals"].append({"id": my_mqtt_client.IDDict.get("Data_DB.Manual"), "val": 0})
                 PLC_WRITE_DATA_Str = json.dumps(PLC_WRITE_DATA)

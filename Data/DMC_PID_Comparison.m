@@ -2,7 +2,7 @@ clear all
 clc
 
 % Read the content
-inputFileName = 'Adaptive_DMC_45-50.csv';
+inputFileName = 'Experiment_Adaptive_DMC_P80.csv';
 fileID = fopen(inputFileName, 'r');
 if fileID == -1
     error('Cannot open input file');
@@ -57,8 +57,9 @@ T = T(zerosNumber:length,1);
 T_SP = T_SP(zerosNumber:length,1);
 OR_DMC = OR_DMC(zerosNumber:length,1);
 
-DMC_offset = 1;
+DMC_offset = 20;
 T = T(DMC_offset:end);
+T_SP = T_SP(DMC_offset:end);
 OR_DMC = OR_DMC(DMC_offset:end);
 
 time = (0:1:length-zerosNumber-DMC_offset+1)';
@@ -66,7 +67,7 @@ time = (0:1:length-zerosNumber-DMC_offset+1)';
 T_OP = zeros(size(T,1), 1) + 50;
 
 % Read the content
-inputFileName = 'PID_45-50.csv';
+inputFileName = 'Experiment_PID_P80.csv';
 fileID = fopen(inputFileName, 'r');
 if fileID == -1
     error('Cannot open input file');
@@ -121,9 +122,10 @@ T_PID = T_PID(zerosNumber:length,1);
 T_SP_PID = T_SP_PID(zerosNumber:length,1);
 Flow_PID = Flow_PID(zerosNumber:length,1);
 
-PID_offset = 7;
+PID_offset = 1;
 
 T_PID = T_PID(PID_offset:end);
+T_SP_PID = T_SP_PID(PID_offset:end);
 Flow_PID = Flow_PID(PID_offset:end);
 
 time_PID = (0:1:length-zerosNumber-PID_offset+1)';
@@ -131,38 +133,38 @@ time_PID = (0:1:length-zerosNumber-PID_offset+1)';
 T_OP = zeros(size(T,1), 1) + 50;
 
 f = figure;
-f.Position = [100 100 800 600];
+f.Position = [100 100 1200 900];
 
 subplot(2,1,1)
-stairs(time, T_OP, '--', 'LineWidth', 1.3, 'Color', '#FF7F00');
+stairs(time, T_SP, '--', 'LineWidth', 1.1, 'Color', '#FF7F00');
 hold on
-plot(time_PID, T_PID, 'LineWidth', 1.8, 'Color', '#34831B');
-plot(time, T, 'LineWidth', 1.8, 'Color', 'b');
+plot(time_PID, T_PID, 'LineWidth', 1.5, 'Color', '#34831B');
+plot(time, T, 'LineWidth', 1.5, 'Color', 'b');
 
 % yline(50+0.05*5, 'r')
 % yline(50-0.05*5, 'r')
 
-OR_DMC = OR_DMC*12/100;
+OR_PID = Flow_PID*100/12;
 
 hold off
 % xlim([0 max(time)])
-xlim([0 350])
-ylim([44 51])
+xlim([0 5600])
+% ylim([44 51])
 xlabel('t, s')
 yl = sprintf("T, %cC", char(176));
 ylabel(yl);
 legend('Punkt pracy', 'Regulacja PID', 'Adaptacyjna regulacja DMC', 'Location', 'southeast')
 grid on
 subplot(2,1,2)
-stairs(time_PID, Flow_PID, 'LineWidth', 1.8, 'Color', '#34831B');
+stairs(time_PID, OR_PID, 'LineWidth', 1.5, 'Color', '#34831B');
 hold on
-stairs(time, OR_DMC, 'LineWidth', 1.8, 'Color', 'b');
+stairs(time, OR_DMC, 'LineWidth', 1.5, 'Color', 'b');
 hold off
 % xlim([0 max(time)])
-xlim([0 350])
+xlim([0 5600])
 xlabel("t, s");
-ylabel("F, l/min");
-legend('Sterowanie - regulator PID', 'Sterowanie - adaptacyjny regulator DMC', 'Location', 'southeast')
+ylabel("OR, %");
+legend('Sterowanie - regulator PID', 'Sterowanie - adaptacyjny regulator DMC', 'Location', 'northeast')
 grid on
 
 %% Criteria

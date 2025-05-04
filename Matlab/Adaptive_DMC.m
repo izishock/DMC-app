@@ -17,10 +17,9 @@ x(1) = T_in;
 x(3) = T_in;
 y = zeros(2*n,1) + T_in;
 
-% Ph_array = [30 40 50 60 70 80 90 100];
-% T_OP_array = [30 40 50 60 70 80];
-Ph_array = 80;
-T_OP_array = 50;
+Ph_array = [30 40 50 60 70 80 90 100];
+T_OP_array = [30 40 50 60 70 80];
+% T_OP_array = 30;
 
 u = zeros(length(T_OP_array), length(Ph_array));
 
@@ -36,10 +35,16 @@ for k=1:length(Ph_array)
         OR = 1/(alpha/(beta*G)*T_OP - alpha/beta*T_in);
         for i=1:2*n
             if i < n
-                OR = 1/(alpha/(beta*G)*(T_OP-10) - alpha/beta*T_in);
+                OR = 1/(alpha/(beta*G)*(T_OP-5) - alpha/beta*T_in);
+                if OR > 100
+                    OR = 100;
+                end
                 u_norm(1) = OR;
             else
-                OR = 1/(alpha/(beta*G)*(T_OP+10) - alpha/beta*T_in);
+                OR = 1/(alpha/(beta*G)*(T_OP+5) - alpha/beta*T_in);
+                if OR > 100
+                    OR = 100;
+                end
                 u_norm(2) = OR;
             end
             F = OR*F_max/100;
@@ -49,7 +54,7 @@ for k=1:length(Ph_array)
             y(i + round(tau0*10):i+round(tau0*10)+n/10) = x(1);
         end
     
-        Tp = 1.4;
+        Tp = 1.3;
         s_raw = (y(n:end)-y(n))/(u_norm(2)-u_norm(1));
         
         step_response(j,k,:) = s_raw(1:1.1*n);
@@ -151,12 +156,12 @@ y = zeros(n,1) + T0;
 u_vec = zeros(n,1);
 
 Ph = 80;
-T_OP = 45;
+T_OP = 55;
 T_OP_prev = T_OP;
-T_OP_next = 50;
+T_OP_next = 39;
 
-Ph_idx = find(Ph_array >= Ph, 1);
-T_OP_idx = find(T_OP_array >= T_OP_next, 1);
+Ph_idx = find(Ph_array > Ph, 1);
+T_OP_idx = find(T_OP_array > T_OP_next, 1);
 
 % Ke = (Ke_params(T_OP_idx,Ph_idx)-Ke_params(T_OP_idx,Ph_idx-1))/(Ph_array(Ph_idx)-Ph_array(Ph_idx-1))*Ph + ...
 %     (Ke_params(T_OP_idx,Ph_idx-1)*Ph_array(Ph_idx)-Ke_params(T_OP_idx,Ph_idx)*Ph_array(Ph_idx-1))/(Ph_array(Ph_idx)-Ph_array(Ph_idx-1));
